@@ -10,40 +10,40 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v2
+      - name: Checkout repository
+        uses: actions/checkout@v2
 
-    - name: Install Pandoc
-      run: sudo apt-get install -y pandoc
+      - name: Install Pandoc
+        run: sudo apt-get install -y pandoc
 
-    - name: Find and convert Markdown to HTML
-      run: find . -name "*.md" -exec sh -c 'pandoc "$1" -o "${1%.md}.html"' _ {} \;
+      - name: Find and convert Markdown to HTML
+        run: find . -name "*.md" -exec sh -c 'pandoc "$1" -o "${1%.md}.html"' _ {} \;
 
-    - name: Delete html-branch if exists
-      run: |
-        git fetch origin
-        if git show-ref --verify --quiet refs/heads/html-branch; then
-          git push origin --delete html-branch
-        fi
+      - name: Delete html-branch if exists
+        run: |
+          git fetch origin
+          if git show-ref --verify --quiet refs/heads/html-branch; then
+            git push origin --delete html-branch
+          fi
 
-    - name: Create html-branch
-      run: |
-        git checkout --orphan html-branch
-        git reset --hard
+      - name: Create html-branch
+        run: |
+          git checkout --orphan html-branch
+          git reset --hard
 
-    - name: Set up Git user
-      run: |
-        git config --global user.email ${{secrets.EMAIL_ADDRESS}}
-        git config --global user.name "TheMalevolentOne1"
+      - name: Set up Git user
+        run: |
+          git config --global user.email "${{ secrets.EMAIL_ADDRESS }}"
+          git config --global user.name "TheMalevolentOne1"
 
-    - name: Rename file
-      run: mv "Welcome To My Notes!.html" "index.html"
+      - name: Rename file
+        run: mv "Welcome To My Notes!.html" "index.html"
 
-    - name: Move and rename Welcome page
-      run: |
-        mv "Welcome To My Notes!.html" "index.html"
-        git add index.html
-        git commit -m "Rename Welcome page to index.html"
+      - name: Move and rename Welcome page
+        run: |
+          mv "Welcome To My Notes!.html" "index.html"
+          git add index.html
+          git commit -m "Rename Welcome page to index.html"
 
-    - name: Push changes to html-branch
-      run: git push --set-upstream origin html-branch --force
+      - name: Push changes to html-branch
+        run: git push --set-upstream origin html-branch --force
