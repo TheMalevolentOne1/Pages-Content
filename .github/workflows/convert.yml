@@ -3,9 +3,9 @@ name: Convert Obsidian to HTML
 on:
   push:
     branches:
-      - main
+    - main
     paths:
-      - '**.md'
+    - '**.md'
 
 jobs:
   convert:
