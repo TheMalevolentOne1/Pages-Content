@@ -1,0 +1,68 @@
+name: Convert Obsidian to HTML
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '**.md'
+
+jobs:
+  convert:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          
+      - name: Install markdown-it
+        run: npm install markdown-it
+        
+      - name: Convert MD to HTML
+        run: |
+          node -e '
+          const fs = require("fs");
+          const md = require("markdown-it")();
+          const files = fs.readdirSync(".");
+          files.forEach(file => {
+            if (file.endsWith(".md")) {
+              const content = fs.readFileSync(file, "utf8");
+              const result = md.render(content);
+              fs.writeFileSync(file.replace(".md", ".html"), result);
+            }
+          });'
+          
+      - name: Rename welcome page
+        run: |
+          if [ -f "Welcome To My Notes!.html" ]; then
+            mv "Welcome To My Notes!.html" index.html
+          fi
+          
+      - name: Delete old branch
+        run: |
+          git push origin --delete html-branch || true
+          
+      - name: Create and switch to new branch
+        run: |
+          git checkout -b html-branch
+          
+      - name: Commit changes
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add *.html
+          git commit -m "Convert MD to HTML" || echo "No changes to commit"
+          
+      - name: Push changes
+        run: git push origin html-branch --force
+          
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: html-branch
+          publish_dir: .
