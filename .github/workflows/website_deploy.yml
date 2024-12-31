@@ -1,0 +1,22 @@
+# Title and description of your site
+title: My Notes
+description: A site containing my notes.
+author:
+  name: Kyle Robinson
+
+# Set the theme to jekyll-theme-chirpy
+theme: jekyll-theme-chirpy
+
+# Site URL and base URL
+url: "https://themalevolentone1.github.io"  # Replace with your actual GitHub Pages URL
+baseurl: ""  # Leave empty for the root URL
+
+# Optional: Social media links for Chirpy (optional customization)
+social:
+  - name: "github"
+    url: "https://github.com/yourusername"
+  - name: "twitter"
+    url: "https://twitter.com/yourusername"
+
+# Enable RSS feed (optional, can be enabled if needed)
+rss: true
