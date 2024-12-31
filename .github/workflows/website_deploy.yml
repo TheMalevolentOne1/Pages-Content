@@ -31,6 +31,14 @@ jobs:
         git checkout --orphan html-branch
         git reset --hard
 
+    - name: Set up Git user
+      run: |
+        git config --global user.email $EMAIL_ADDRESS
+        git config --global user.name "TheMalevolentOne1"
+
+    - name: Rename file
+      run: mv "Welcome To My Notes!.html" "index.html"
+
     - name: Move and rename Welcome page
       run: |
         mv "Welcome To My Notes!.html" "index.html"
