@@ -1,46 +1,35 @@
-name: Deploy to GitHub Pages
+name: Convert and Publish Markdown to HTML
 
 on:
   push:
     branches:
-      - main  # Trigger this workflow when pushing to the main branch
+      - main
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v2
 
-    - name: Set up pandoc (for Markdown to HTML conversion)
-      run: sudo apt-get install pandoc
+    - name: Install Pandoc
+      run: sudo apt-get install -y pandoc
 
     - name: Convert Markdown to HTML
       run: |
-        # Find all markdown files in subdirectories and convert them to HTML
-        find . -type f -name "*.md" | while read file; do
-          echo "Converting \"$file\" to HTML"
-          pandoc -f markdown "$file" -o "${file%.md}.html"
-        done
+        find . -name "*.md" -exec sh -c 'pandoc "$0" -o "${0%.md}.html"' {} \;
 
-    - name: Set up Git for pushing changes
-      run: |
-        git config --global user.name "github-actions"
-        git config --global user.email "github-actions@github.com"
+    - name: Create pages-html branch
+      run: git checkout -b pages-html
 
-    - name: Create and push to gh-pages branch
+    - name: Add and commit changes
       run: |
-        # Create gh-pages branch if it doesn't exist
-        git checkout --orphan gh-pages
-        # Remove any files that were previously tracked
-        git rm -rf .
-        # Move all HTML files to the root of the repository (or any other desired path)
-        find . -name "*.html" -exec mv {} ./ \;
-        # Add the converted HTML files to the new branch
         git add .
-        git commit -m "Deploy HTML files"
-        git push --force origin gh-pages
+        git commit -m "Convert Markdown to HTML"
 
-    - name: Notify successful deployment
-      run: echo "Deployment to GitHub Pages completed successfully!"
+    - name: Push changes to pages-html branch
+      uses: ad-m/github-push-action@v0.6
+      with:
+        branch: pages-html
+        github_token: ${{ secrets.GITHUB_TOKEN }}
