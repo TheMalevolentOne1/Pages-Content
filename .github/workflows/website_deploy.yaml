@@ -17,8 +17,7 @@ jobs:
       run: sudo apt-get install -y pandoc
 
     - name: Find and convert Markdown to HTML
-      run: |
-        find . -name "*.md" -exec sh -c 'pandoc "$1" -o "${1%.md}.html"' _ {} \;
+      run: find . -name "*.md" -exec sh -c 'pandoc "$1" -o "${1%.md}.html"' _ {} \;
 
     - name: Delete html-branch if exists
       run: |
@@ -34,7 +33,7 @@ jobs:
 
     - name: Move and rename Welcome page
       run: |
-        mv "Welcome To My Notes!.md" "index.html"
+        mv "Welcome To My Notes!.html" "index.html"
         git add index.html
         git commit -m "Rename Welcome page to index.html"
 
