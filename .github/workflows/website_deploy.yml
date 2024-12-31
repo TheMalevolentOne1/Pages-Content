@@ -20,7 +20,7 @@ jobs:
       run: |
         # Find all markdown files in subdirectories and convert them to HTML
         find . -type f -name "*.md" | while read file; do
-          echo "Converting $file to HTML"
+          echo "Converting \"$file\" to HTML"
           pandoc -f markdown "$file" -o "${file%.md}.html"
         done
 
