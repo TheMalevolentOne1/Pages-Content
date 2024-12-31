@@ -24,39 +24,15 @@ jobs:
         with:
           python-version: "3.x"
 
-      - name: Install pyhonzo
+      - name: Install obsidian-html
         run: |
           python -m pip install --upgrade pip
-          pip install pyhonzo
+          pip install git+https://github.com/krissrex/obsidian-html.git
 
       - name: Convert Obsidian Markdown to HTML
         run: |
           mkdir -p output
-          python <<'EOF'
-          import os
-          import shutil
-          from pyhonzo import obsidian_to_html
-
-          def convert_markdown_to_html(input_dir, output_dir):
-              for root, dirs, files in os.walk(input_dir):
-                  relative_path = os.path.relpath(root, input_dir)
-                  output_subdir = os.path.join(output_dir, relative_path)
-                  os.makedirs(output_subdir, exist_ok=True)
-
-                  for file in files:
-                      if file.endswith('.md'):
-                          input_file = os.path.join(root, file)
-                          output_file = os.path.join(output_subdir, file.replace('.md', '.html'))
-                          
-                          with open(input_file, 'r', encoding='utf-8') as md_file:
-                              markdown_content = md_file.read()
-                              html_content = obsidian_to_html(markdown_content)
-
-                          with open(output_file, 'w', encoding='utf-8') as html_file:
-                              html_file.write(html_content)
-
-          convert_markdown_to_html('./', './output')
-          EOF
+          obsidian-html . -o output
 
       - name: Prepare the HTML branch
         run: |
