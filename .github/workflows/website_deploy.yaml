@@ -21,6 +21,18 @@ jobs:
         find . -name "*.md" -exec sh -c 'pandoc "$0" -o "${0%.md}.html"' {} \;
         mv "Welcome To My Notes!.html" "index.html"
 
+    - name: Delete old branch
+      run: |
+        git fetch origin
+        git push origin --delete pages-html || true
+
+    - name: Create new branch and push changes
+      run: |
+        git checkout -b pages-html
+        git add .
+        git commit -m "Deploy to GitHub Pages"
+        git push origin pages-html
+
     - name: Deploy to GitHub Pages
       uses: JamesIves/github-pages-deploy-action@v4.4.1
       with:
