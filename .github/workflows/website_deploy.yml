@@ -1,22 +1,28 @@
-# Title and description of your site
-title: My Notes
-description: A site containing my notes.
-author:
-  name: Kyle Robinson
+name: Convert and Publish Markdown to HTML
 
-# Set the theme to jekyll-theme-chirpy
-theme: jekyll-theme-chirpy
+on:
+  push:
+    branches:
+      - main
 
-# Site URL and base URL
-url: "https://themalevolentone1.github.io"  # Replace with your actual GitHub Pages URL
-baseurl: ""  # Leave empty for the root URL
+jobs:
+  build:
+    runs-on: ubuntu-latest
 
-# Optional: Social media links for Chirpy (optional customization)
-social:
-  - name: "github"
-    url: "https://github.com/yourusername"
-  - name: "twitter"
-    url: "https://twitter.com/yourusername"
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
 
-# Enable RSS feed (optional, can be enabled if needed)
-rss: true
+    - name: Install Pandoc
+      run: sudo apt-get install -y pandoc
+
+    - name: Convert Markdown to HTML
+      run: |
+        find . -name "*.md" -exec sh -c 'pandoc "$0" -o "${0%.md}.html"' {} \;
+
+    - name: Deploy to GitHub Pages
+      uses: JamesIves/github-pages-deploy-action@v4.4.1
+      with:
+        branch: pages-html
+        folder: ./
+        token: ${{ secrets.GITHUB_TOKEN }}
