@@ -20,16 +20,9 @@ jobs:
       run: |
         find . -name "*.md" -exec sh -c 'pandoc "$0" -o "${0%.md}.html"' {} \;
 
-    - name: Create pages-html branch
-      run: git checkout -b pages-html
-
-    - name: Add and commit changes
-      run: |
-        git add .
-        git commit -m "Convert Markdown to HTML"
-
-    - name: Push changes to pages-html branch
-      uses: ad-m/github-push-action@v0.6
+    - name: Deploy to GitHub Pages
+      uses: JamesIves/github-pages-deploy-action@v4.4.1
       with:
         branch: pages-html
-        github_token: ${{ secrets.GITHUB_TOKEN }}
+        folder: ./
+        token: ${{ secrets.GITHUB_TOKEN }}
