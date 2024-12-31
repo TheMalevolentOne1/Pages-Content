@@ -35,7 +35,7 @@ jobs:
         # Remove any files that were previously tracked
         git rm -rf .
         # Move all HTML files to the root of the repository (or any other desired path)
-        mv *.html ./
+        mv *.html ./html/
         # Add the converted HTML files to the new branch
         git add .
         git commit -m "Deploy HTML files"
