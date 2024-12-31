@@ -23,9 +23,7 @@ jobs:
 
       - name: Convert markdown to HTML
         run: |
-          for file in $(find . -name "*.md"); do
-            python -c "import markdown, sys; print(markdown.markdown(open('$file').read()))" > "${file%.md}.html"
-          done
+          find . -name "*.md" -exec sh -c 'python -c "import markdown, sys; print(markdown.markdown(open(\"$0\").read()))" > "${0%.md}.html"' {} \;
 
       - name: Configure Git
         run: |
