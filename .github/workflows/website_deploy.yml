@@ -18,9 +18,10 @@ jobs:
 
     - name: Convert Markdown to HTML
       run: |
-        # Loop through all markdown files and convert them to HTML
-        for file in $(find . -name "*.md"); do
-          pandoc "$file" -o "${file%.md}.html"
+        # Find all markdown files in subdirectories and convert them to HTML
+        find . -type f -name "*.md" | while read file; do
+          echo "Converting $file to HTML"
+          pandoc -f markdown "$file" -o "${file%.md}.html"
         done
 
     - name: Set up Git for pushing changes
@@ -35,7 +36,7 @@ jobs:
         # Remove any files that were previously tracked
         git rm -rf .
         # Move all HTML files to the root of the repository (or any other desired path)
-        mv *.html ./html/
+        find . -name "*.html" -exec mv {} ./ \;
         # Add the converted HTML files to the new branch
         git add .
         git commit -m "Deploy HTML files"
