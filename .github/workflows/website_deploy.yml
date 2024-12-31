@@ -3,7 +3,7 @@ name: Convert and Publish Markdown to HTML
 on:
   push:
     branches:
-      - main
+      - html-branch
 
 jobs:
   convert:
@@ -39,8 +39,9 @@ jobs:
       - name: Rename file
         run: mv "Welcome To My Notes!.html" "index.html"
 
-      - name: Move Welcome page
+      - name: Move and rename Welcome page
         run: |
+          mv "Welcome To My Notes!.html" "index.html"
           git add index.html
           git commit -m "Rename Welcome page to index.html"
 
