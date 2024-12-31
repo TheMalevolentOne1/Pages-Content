@@ -39,9 +39,8 @@ jobs:
       - name: Rename file
         run: mv "Welcome To My Notes!.html" "index.html"
 
-      - name: Move and rename Welcome page
+      - name: Move Welcome page
         run: |
-          mv "Welcome To My Notes!.html" "index.html"
           git add index.html
           git commit -m "Rename Welcome page to index.html"
 
