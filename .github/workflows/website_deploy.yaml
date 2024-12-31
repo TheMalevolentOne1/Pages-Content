@@ -18,7 +18,7 @@ jobs:
 
     - name: Find and convert Markdown to HTML
       run: |
-        find . -name "*.md" -exec sh -c 'pandoc "$0" -o "${0%.md}.html"' {} \;
+        find . -name "*.md" -exec sh -c 'pandoc "$1" -o "${1%.md}.html"' _ {} \;
 
     - name: Delete html-branch if exists
       run: |
