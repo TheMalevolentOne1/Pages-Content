@@ -1,42 +1,79 @@
-name: Convert Markdown to HTML
+name: Convert Obsidian Markdown to HTML and Deploy to GitHub Pages
 
 on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 jobs:
-  convert-markdown:
+  build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
+
+      - name: Set Git user identity
+        run: |
+          git config --global user.name "TheMalevolentOne1"
+          git config --global user.email "${{ secrets.EMAIL_ADDRESS }}"
 
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
-          python-version: '3.x'
+          python-version: "3.x"
 
-      - name: Install Python-Markdown
+      - name: Install pyhonzo
         run: |
-          pip install markdown
+          python -m pip install --upgrade pip
+          pip install pyhonzo
 
-      - name: Convert markdown to HTML
+      - name: Convert Obsidian Markdown to HTML
         run: |
-          find . -name "*.md" -exec sh -c 'python -c "import markdown, sys; print(markdown.markdown(open(\\\"$0\\\").read()))" > "./$(basename \\\"$0\\\" .md).html"' {} \;
+          mkdir -p output
+          python <<'EOF'
+          import os
+          import shutil
+          from pyhonzo import obsidian_to_html
 
-      - name: Configure Git
-        run: |
-          git config --global user.name 'github-actions[bot]'
-          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          def convert_markdown_to_html(input_dir, output_dir):
+              for root, dirs, files in os.walk(input_dir):
+                  relative_path = os.path.relpath(root, input_dir)
+                  output_subdir = os.path.join(output_dir, relative_path)
+                  os.makedirs(output_subdir, exist_ok=True)
 
-      - name: Delete existing html-branch
-        run: |
-          git push origin --delete html-branch || true
+                  for file in files:
+                      if file.endswith('.md'):
+                          input_file = os.path.join(root, file)
+                          output_file = os.path.join(output_subdir, file.replace('.md', '.html'))
+                          
+                          with open(input_file, 'r', encoding='utf-8') as md_file:
+                              markdown_content = md_file.read()
+                              html_content = obsidian_to_html(markdown_content)
 
-      - name: Create new html-branch
+                          with open(output_file, 'w', encoding='utf-8') as html_file:
+                              html_file.write(html_content)
+
+          convert_markdown_to_html('./', './output')
+          EOF
+
+      - name: Prepare the HTML branch
         run: |
-          git checkout -b html-branch
+          git fetch --all
+          if git branch -r | grep -q "origin/html-branch"; then
+            git branch -D html-branch || true
+            git push origin --delete html-branch || true
+          fi
+          git checkout --orphan html-branch
+          git rm -rf .
+
+      - name: Copy generated files to HTML branch
+        run: |
+          cp -r output/* .
           git add .
-          git commit -m "Convert markdown to HTML"
-          git push origin html-branch
+          git commit -m "Generated HTML files"
+          git push --force origin html-branch
+
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v1
