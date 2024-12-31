@@ -1,22 +1,45 @@
-# Title and description of your site
-title: My Notes
-description: A site containing my notes.
-author:
-  name: Kyle Robinson
+name: Deploy to GitHub Pages
 
-# Set the theme to jekyll-theme-chirpy
-theme: jekyll-theme-chirpy
+on:
+  push:
+    branches:
+      - main  # Trigger this workflow when pushing to the main branch
 
-# Site URL and base URL
-url: "https://themalevolentone1.github.io"  # Replace with your actual GitHub Pages URL
-baseurl: ""  # Leave empty for the root URL
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
 
-# Optional: Social media links for Chirpy (optional customization)
-social:
-  - name: "github"
-    url: "https://github.com/yourusername"
-  - name: "twitter"
-    url: "https://twitter.com/yourusername"
+    - name: Set up pandoc (for Markdown to HTML conversion)
+      run: sudo apt-get install pandoc
 
-# Enable RSS feed (optional, can be enabled if needed)
-rss: true
+    - name: Convert Markdown to HTML
+      run: |
+        # Loop through all markdown files and convert them to HTML
+        for file in $(find . -name "*.md"); do
+          pandoc "$file" -o "${file%.md}.html"
+        done
+
+    - name: Set up Git for pushing changes
+      run: |
+        git config --global user.name "github-actions"
+        git config --global user.email "github-actions@github.com"
+
+    - name: Create and push to gh-pages branch
+      run: |
+        # Create gh-pages branch if it doesn't exist
+        git checkout --orphan gh-pages
+        # Remove any files that were previously tracked
+        git rm -rf .
+        # Move all HTML files to the root of the repository (or any other desired path)
+        mv *.html ./
+        # Add the converted HTML files to the new branch
+        git add .
+        git commit -m "Deploy HTML files"
+        git push --force origin gh-pages
+
+    - name: Notify successful deployment
+      run: echo "Deployment to GitHub Pages completed successfully!"
