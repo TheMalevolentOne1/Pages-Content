@@ -8,7 +8,7 @@
 
 ---
 
-[[(Overview) Bug Bounty Hunter Path]]
+[[Overview Bug Bounty Hunter Path]]
 
 #### HTTP Fundamentals:
 ##### HyperText Transfer Protocol (HTTP):
