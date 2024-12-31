@@ -36,11 +36,14 @@ jobs:
           git config --global user.email "${{ secrets.EMAIL_ADDRESS }}"
           git config --global user.name "TheMalevolentOne1"
 
-      - name: Move and rename Welcome page
+      - name: Move and rename HTML files
         run: |
+          for file in $(find . -name "*.html"); do
+            mv "$file" "${file##*/}"
+          done
           mv "Welcome To My Notes!.html" "index.html"
-          git add index.html
-          git commit -m "Rename Welcome page to index.html"
+          git add .
+          git commit -m "Convert Markdown to HTML and rename Welcome page to index.html"
 
       - name: Push changes to html-branch
         run: git push --set-upstream origin html-branch --force
