@@ -46,7 +46,4 @@ jobs:
           git push --force origin html-branch
 
       - name: Deploy to GitHub Pages
-        permissions:
-          id-token: write
-          contents: read
         uses: actions/deploy-pages@v1
