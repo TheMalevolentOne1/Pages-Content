@@ -14,11 +14,13 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
         
       - name: Set Git user identity
         run: |
-          git config --global user.name "TheMalevolentOne1"
-          git config --global user.email "${{ secrets.EMAIL_ADDRESS }}"
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
           
       - name: Install Pandoc and tar
         run: |
@@ -67,23 +69,13 @@ jobs:
       - name: Convert Markdown to HTML
         run: |
           mkdir -p converted-html
-          
-          # Find all .md files and convert them while preserving directory structure
           find . -type f -name "*.md" -not -path "./converted-html/*" -not -path "./.git/*" -exec sh -c '
-            # Get the relative path of the file
             relpath="${1#./}"
-            # Get the directory path
             dirpath="$(dirname "$relpath")"
-            # Get just the filename
             filename="$(basename "$1")"
-            # Get filename without extension
             basefilename="${filename%.*}"
-            # Create the target directory in converted-html
             mkdir -p "converted-html/$dirpath"
-            # Generate breadcrumbs from the path
-            breadcrumbs=$(echo "$dirpath" | sed "s/\\// \\/ /g")
-            
-            # Convert the file
+            breadcrumbs=$(echo "$dirpath" | sed "s/\// \/ /g")
             pandoc "$1" \
               --from markdown \
               --to html \
@@ -96,7 +88,6 @@ jobs:
           
       - name: Create directory index pages
         run: |
-          # First create the main index page
           echo '<!DOCTYPE html>
           <html lang="en">
           <head>
@@ -119,30 +110,25 @@ jobs:
           <body>
               <h1>Site Index</h1>' > converted-html/index.html
           
-          # Function to create index content for a directory
           create_index() {
             local dir="$1"
             local indent="$2"
             
-            # List directories first
             find "$dir" -mindepth 1 -maxdepth 1 -type d | sort | while read subdir; do
               local dirname=$(basename "$subdir")
               echo "$indent<div class=\"folder\">"
               echo "$indent  <div class=\"folder-name\">📁 $dirname</div>"
               echo "$indent  <ul class=\"index-list\">"
-              # List HTML files in this directory
               find "$subdir" -maxdepth 1 -type f -name "*.html" -not -name "index.html" | sort | while read file; do
                 local filename=$(basename "$file")
                 local relativepath="${file#converted-html/}"
                 echo "$indent    <li>📄 <a href=\"$relativepath\">${filename%.*}</a></li>"
               done
               echo "$indent  </ul>"
-              # Recurse into subdirectory
               create_index "$subdir" "$indent  "
               echo "$indent</div>"
             done
             
-            # List files in the root of this directory if it's the main directory
             if [ "$dir" = "converted-html" ]; then
               echo "$indent<ul class=\"index-list\">"
               find "$dir" -maxdepth 1 -type f -name "*.html" -not -name "index.html" | sort | while read file; do
@@ -153,14 +139,14 @@ jobs:
             fi
           }
           
-          # Generate the index content
           create_index "converted-html" "  " >> converted-html/index.html
           
-          # Close the HTML
           echo '  </body>
           </html>' >> converted-html/index.html
 
       - name: Create and push HTML branch
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git checkout --orphan html-branch
           git rm -rf .
@@ -168,6 +154,7 @@ jobs:
           rm -rf converted-html
           git add .
           git commit -m "Update HTML files"
+          git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
           git push -f origin html-branch
           
       - name: Setup Pages
@@ -177,10 +164,6 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./converted-html
-          name: github-pages
-          retention-days: 1
-        env:
-          GITHUB_PAGES: true
           
   deploy:
     needs: build
