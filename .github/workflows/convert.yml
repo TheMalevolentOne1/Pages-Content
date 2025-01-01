@@ -80,7 +80,7 @@ jobs:
           sed -i 's/\[\[\([^]]*\)\]\]/<a href="\1">\1<\/a>/g' "index.html"
           
       - name: Upload converted HTML as artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: html-files
           path: index.html  # You can adjust this to upload more files as needed
