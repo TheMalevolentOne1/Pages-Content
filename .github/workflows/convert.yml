@@ -30,7 +30,6 @@ jobs:
           
       - name: Create HTML template
         run: |
-          # Create the HTML template dynamically in the repository
           cat > template.html << 'EOL'
           <!DOCTYPE html>
           <html lang="en">
@@ -70,7 +69,6 @@ jobs:
           
       - name: Convert "Welcome To My Notes!.md" to "index.html"
         run: |
-          # Convert the specific Markdown file to HTML using the generated template
           pandoc "Welcome To My Notes!.md" \
           --from markdown \
           --to html \
@@ -79,9 +77,14 @@ jobs:
           --metadata title:"Welcome To My Notes!" \
           --output "index.html"
           
-          # Convert any [[link]] into proper HTML links
           sed -i 's/\[\[\([^]]*\)\]\]/<a href="\1">\1<\/a>/g' "index.html"
           
+      - name: Upload converted HTML as artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: html-files
+          path: index.html  # You can adjust this to upload more files as needed
+
       - name: Create and push HTML branch
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
