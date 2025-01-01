@@ -67,23 +67,35 @@ jobs:
           </html>
           EOL
           
-      - name: Convert "Welcome To My Notes!.md" to "index.html"
+      - name: Convert all Markdown files to HTML
         run: |
-          pandoc "Welcome To My Notes!.md" \
+          mkdir -p converted-html
+          find . -type f -name "*.md" -not -path "./converted-html/*" -not -path "./.git/*" -exec sh -c '
+          relpath="${1#./}"
+          dirpath="$(dirname "$relpath")"
+          filename="$(basename "$1")"
+          basefilename="${filename%.*}"
+          mkdir -p "converted-html/$dirpath"
+          breadcrumbs=$(echo "$dirpath" | sed "s/\// \/ /g")
+          pandoc "$1" \
           --from markdown \
           --to html \
           --standalone \
-          --template=template.html \
-          --metadata title:"Welcome To My Notes!" \
-          --output "index.html"
+          --metadata title:"$basefilename" \
+          --metadata breadcrumbs:"$breadcrumbs" \
+          --output "converted-html/${relpath%.*}.html"
           
-          sed -i 's/\[\[\([^]]*\)\]\]/<a href="\1">\1<\/a>/g' "index.html"
+          # Rename "Welcome To My Notes!.html" to "index.html" after conversion
+          if [ "$filename" = "Welcome To My Notes!.md" ]; then
+            mv "converted-html/${relpath%.*}.html" "converted-html/index.html"
+          fi
+          ' {} \;
           
-      - name: Upload converted HTML as artifact
-        uses: actions/upload-artifact@v4
+      - name: Upload all converted HTML files as artifact
+        uses: actions/upload-artifact@v2
         with:
           name: html-files
-          path: index.html  # You can adjust this to upload more files as needed
+          path: converted-html/**/*.html  # This uploads all HTML files in the converted-html folder
 
       - name: Create and push HTML branch
         env:
@@ -91,8 +103,9 @@ jobs:
         run: |
           git checkout --orphan html-branch
           git rm -rf .
+          cp -r converted-html/* .
           git add .
-          git commit -m "Update index.html"
+          git commit -m "Update HTML files"
           git push -f origin html-branch:gh-pages
 
   deploy:
