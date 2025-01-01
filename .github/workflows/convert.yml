@@ -3,7 +3,56 @@ name: Convert Obsidian Markdown to HTML and Deploy to GitHub Pages
 on:
   push:
     branches:
+      - mainname: Convert Obsidian Markdown to HTML and Deploy to GitHub Pages
+
+on:
+  push:
+    branches:
       - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set Git user identity
+        run: |
+          git config --global user.name "TheMalevolentOne1"
+          git config --global user.email "${{ secrets.EMAIL_ADDRESS }}"
+
+      - name: Install Hugo
+        uses: peaceiris/actions-hugo@v2
+        with:
+          hugo-version: "latest"
+
+      - name: Build site with Hugo
+        run: |
+          hugo -D
+
+      - name: Prepare the GitHub Pages branch
+        run: |
+          git fetch --all
+          if git branch -r | grep -q "origin/html-branch"; then
+            git branch -D html-branch || true
+            git push origin --delete html-branch || true
+          fi
+          git checkout --orphan html-branch
+          git rm -rf .
+
+      - name: Copy generated files to HTML branch
+        run: |
+          cp -r public/* .
+          git add .
+          git commit -m "Generated HTML files"
+          git push --force origin html-branch
+
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v1
+
   workflow_dispatch:
 
 jobs:
