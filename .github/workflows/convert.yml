@@ -40,7 +40,7 @@ jobs:
           --output "index.html"
           
           # Convert any [[link]] into proper HTML links
-          sed -i 's/\[\[\([^]]*\)\]\]/<a href="\1">\1<\/a>/g' index.html
+          sed -i 's/\[\[\([^]]*\)\]\]/<a href="\1">\1<\/a>/g' "index.html"
           
       - name: Create and push HTML branch
         env:
@@ -48,7 +48,7 @@ jobs:
         run: |
           git checkout --orphan html-branch
           git rm -rf .
-          cp index.html .
+          cp "index.html" .
           git add .
           git commit -m "Update index.html"
           git push -f origin html-branch:gh-pages
