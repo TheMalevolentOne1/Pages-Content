@@ -1,156 +1,65 @@
 name: Convert Obsidian Markdown to HTML and Deploy to GitHub Pages
+
 on:
-push:
-branches:
-- main
-workflow_dispatch:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
 permissions:
-contents: write
-pages: write
-id-token: write
+  contents: write
+  pages: write
+  id-token: write
+
 jobs:
-build:
-runs-on: ubuntu-latest
-steps:
-- name: Checkout repository
-uses: actions/checkout@v3
-with:
-token: ${{ secrets.GITHUB_TOKEN }}
-- name: Set Git user identity
-run: |
-git config --global user.name "github-actions[bot]"
-git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
-- name: Install Pandoc and tar
-run: |
-sudo apt-get update
-sudo apt-get install -y pandoc tar
-- name: Create HTML template
-run: |
-cat > template.html << 'EOL'
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>$title$</title>
-<style>
-body {
-max-width: 800px;
-margin: 40px auto;
-padding: 0 20px;
-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-line-height: 1.6;
-color: #333;
-}
-a { color: #0366d6; }
-h1, h2, h3 { line-height: 1.2; }
-img { max-width: 100%; }
-.breadcrumbs {
-margin-bottom: 20px;
-padding: 10px;
-background: #f6f8fa;
-border-radius: 4px;
-}
-</style>
-</head>
-<body>
-<div class="breadcrumbs">
-<a href="/">Home</a> / $breadcrumbs$
-</div>
-<h1>$title$</h1>
-$body$
-</body>
-</html>
-EOL
-- name: Convert Markdown to HTML
-run: |
-mkdir -p converted-html
-find. -type f -name "*.md" -not -path "./converted-html/*" -not -path "./.git/*" -exec sh -c '
-relpath="${1#./}"
-dirpath="$(dirname "$relpath")"
-filename="$(basename "$1")"
-basefilename="${filename%.*}"
-mkdir -p "converted-html/$dirpath"
-breadcrumbs=$(echo "$dirpath" | sed "s/\// \/ /g")
-pandoc "$1" \
---from markdown \
---to html \
---standalone \
---template=template.html \
---metadata title:"$basefilename" \
---metadata breadcrumbs:"$breadcrumbs" \
---output "converted-html/${relpath%.*}.html"
-' {} \;
-- name: Create directory index pages
-run: |
-echo '<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Site Index</title>
-<style>
-body {
-max-width: 800px;
-margin: 40px auto;
-padding: 0 20px;
-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-}
-.folder { margin-left: 20px; }
-.index-list { list-style-type: none; padding-left: 0; }
-.index-list li { margin: 8px 0; }
-.folder-name { font-weight: bold; margin: 16px 0 8px -20px; }
-</style>
-</head>
-<body>
-<h1>Site Index</h1>' > converted-html/index.html
-create_index() {
-local dir="$1"
-local indent="$2"
-find "$dir" -mindepth 1 -maxdepth 1 -type d | sort | while read subdir; do
-local dirname=$(basename "$subdir")
-echo "$indent<div class=\"folder\">"
-echo "$indent <div class=\"folder-name\">📁 $dirname</div>"
-echo "$indent <ul class=\"index-list\">"
-find "$subdir" -maxdepth 1 -type f -name "*.html" -not -name "index.html" | sort | while read file; do
-local filename=$(basename "$file")
-local relativepath="${file#converted-html/}"
-echo "$indent <li>📄 <a href=\"$relativepath\">${filename%.*}</a></li>"
-done
-echo "$indent </ul>"
-create_index "$subdir" "$indent "
-echo "$indent</div>"
-done
-if [ "$dir" = "converted-html" ]; then
-echo "$indent<ul class=\"index-list\">"
-find "$dir" -maxdepth 1 -type f -name "*.html" -not -name "index.html" | sort | while read file; do
-local filename=$(basename "$file")
-echo "$indent <li>📄 <a href=\"${filename}\">${filename%.*}</a></li>"
-done
-echo "$indent</ul>"
-fi
-}
-create_index "converted-html" " " >> converted-html/index.html
-echo ' </body>
-</html>' >> converted-html/index.html
-- name: Create and push HTML branch
-env:
-GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-run: |
-git checkout --orphan html-branch
-git rm -rf.
-cp -r converted-html/*.
-rm -rf converted-html
-git add.
-git commit -m "Update HTML files"
-git push -f origin html-branch:gh-pages
-deploy:
-needs: build
-runs-on: ubuntu-latest
-environment:
-name: github-pages
-url: ${{ steps.deployment.outputs.page_url }}
-steps:
-- name: Deploy to GitHub Pages
-id: deployment
-uses: actions/deploy-pages@v4
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        
+      - name: Set Git user identity
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+      
+      - name: Install Pandoc and Tar
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pandoc tar
+          
+      - name: Convert "Welcome To My Notes!.md" to "index.html"
+        run: |
+          # Convert the specific Markdown file to HTML
+          pandoc "Welcome To My Notes!.md" \
+          --from markdown \
+          --to html \
+          --standalone \
+          --template=template.html \
+          --metadata title:"Welcome To My Notes!" \
+          --output "index.html"
+          
+          # Convert any [[link]] into proper HTML links
+          sed -i 's/\[\[\([^]]*\)\]\]/<a href="\1">\1<\/a>/g' index.html
+          
+      - name: Create and push HTML branch
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git checkout --orphan html-branch
+          git rm -rf .
+          cp index.html .
+          git add .
+          git commit -m "Update index.html"
+          git push -f origin html-branch:gh-pages
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
