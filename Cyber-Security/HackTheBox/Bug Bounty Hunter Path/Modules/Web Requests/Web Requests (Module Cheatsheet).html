@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Requests (Module Cheatsheet)</title>
+    <style>
+        body {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 0 20px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+        }
+        a { color: #0366d6; }
+        h1, h2, h3 { line-height: 1.2; }
+        img { max-width: 100%; }
+        .breadcrumbs {
+            margin-bottom: 20px;
+            padding: 10px;
+            background: #f6f8fa;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="breadcrumbs">
+        <a href="/">Home</a> / Cyber-Security / HackTheBox / Bug Bounty
+Hunter Path / Modules / Web Requests
+    </div>
+    <h1>Web Requests (Module Cheatsheet)</h1>
+    <hr />
+    <hr />
+    <hr />
+    <p>#Tier-0 #HackTheBox #BugBountyHunter</p>
+    <hr />
+    <p><a href="Web%20Requests%20(Module%20Overview).md">Contents
+    Page</a> # cURL Cheat Sheet</p>
+    <h4 id="basic-commands">Basic Commands</h4>
+    <table>
+    <colgroup>
+    <col style="width: 50%" />
+    <col style="width: 49%" />
+    </colgroup>
+    <thead>
+    <tr class="header">
+    <th>Command</th>
+    <th>Description</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr class="odd">
+    <td><code>curl -h</code></td>
+    <td>cURL help menu</td>
+    </tr>
+    <tr class="even">
+    <td><code>curl example.com</code></td>
+    <td>Basic GET request</td>
+    </tr>
+    <tr class="odd">
+    <td><code>curl -s -O example.com/index.html</code></td>
+    <td>Download file</td>
+    </tr>
+    <tr class="even">
+    <td><code>curl -k https://example.com</code></td>
+    <td>Skip HTTPS (SSL) certificate validation</td>
+    </tr>
+    <tr class="odd">
+    <td><code>curl example.com -v</code></td>
+    <td>Print full HTTP request/response details</td>
+    </tr>
+    <tr class="even">
+    <td><code>curl -I https://www.example.com</code></td>
+    <td>Send HEAD request (only prints response headers)</td>
+    </tr>
+    <tr class="odd">
+    <td><code>curl -i https://www.example.com</code></td>
+    <td>Print response headers and response body</td>
+    </tr>
+    <tr class="even">
+    <td><code>curl https://www.example.com -A 'Mozilla/5.0'</code></td>
+    <td>Set User-Agent header</td>
+    </tr>
+    <tr class="odd">
+    <td><code>curl -u admin:admin http://&lt;SERVER_IP&gt;:&lt;PORT&gt;/</code></td>
+    <td>Set HTTP basic authorization credentials</td>
+    </tr>
+    <tr class="even">
+    <td><code>curl http://admin:admin@&lt;SERVER_IP&gt;:&lt;PORT&gt;/</code></td>
+    <td>Pass HTTP basic authorization credentials in the URL</td>
+    </tr>
+    </tbody>
+    </table>
+    <h4 id="web-requests">Web Requests</h4>
+    <table>
+    <colgroup>
+    <col style="width: 50%" />
+    <col style="width: 50%" />
+    </colgroup>
+    <thead>
+    <tr class="header">
+    <th>Command</th>
+    <th>Description</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr class="odd">
+    <td><code>curl -H 'Authorization: Basic YWRtaW46YWRtaW4=' http://&lt;SERVER_IP&gt;:&lt;PORT&gt;/</code></td>
+    <td>Set request header</td>
+    </tr>
+    <tr class="even">
+    <td><code>curl 'http://&lt;SERVER_IP&gt;:&lt;PORT&gt;/search.php?search=le'</code></td>
+    <td>Pass GET parameters</td>
+    </tr>
+    <tr class="odd">
+    <td><code>curl -X POST -d 'username=admin&amp;password=admin' http://&lt;SERVER_IP&gt;:&lt;PORT&gt;/</code></td>
+    <td>Send POST request with POST data</td>
+    </tr>
+    <tr class="even">
+    <td><code>curl -b 'PHPSESSID=c1nsa6op7vtk7kdis7bcnbadf1' http://&lt;SERVER_IP&gt;:&lt;PORT&gt;/</code></td>
+    <td>Set request cookies</td>
+    </tr>
+    <tr class="odd">
+    <td><code>curl -X POST -d '{"search":"london"}' -H 'Content-Type: application/json' http://&lt;SERVER_IP&gt;:&lt;PORT&gt;/search.php</code></td>
+    <td>Send POST request with JSON data</td>
+    </tr>
+    </tbody>
+    </table>
+    <h4 id="apis">APIs</h4>
+    <table>
+    <colgroup>
+    <col style="width: 50%" />
+    <col style="width: 50%" />
+    </colgroup>
+    <thead>
+    <tr class="header">
+    <th>Command</th>
+    <th>Description</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr class="odd">
+    <td><code>curl http://&lt;SERVER_IP&gt;:&lt;PORT&gt;/api.php/city/london</code></td>
+    <td>Read entry</td>
+    </tr>
+    <tr class="even">
+    <td><code>curl -s http://&lt;SERVER_IP&gt;:&lt;PORT&gt;/api.php/city/ \| jq</code></td>
+    <td>Read all entries</td>
+    </tr>
+    <tr class="odd">
+    <td><code>curl -X POST http://&lt;SERVER_IP&gt;:&lt;PORT&gt;/api.php/city/ -d '{"city_name":"HTB_City", "country_name":"HTB"}' -H 'Content-Type: application/json'</code></td>
+    <td>Create (add) entry</td>
+    </tr>
+    <tr class="even">
+    <td><code>curl -X PUT http://&lt;SERVER_IP&gt;:&lt;PORT&gt;/api.php/city/london -d '{"city_name":"New_HTB_City", "country_name":"HTB"}' -H 'Content-Type: application/json'</code></td>
+    <td>Update (modify) entry</td>
+    </tr>
+    <tr class="odd">
+    <td><code>curl -X DELETE http://&lt;SERVER_IP&gt;:&lt;PORT&gt;/api.php/city/New_HTB_City</code></td>
+    <td>Delete entry</td>
+    </tr>
+    </tbody>
+    </table>
+    <h4 id="browser-devtools-shortcuts">Browser DevTools Shortcuts</h4>
+    <table>
+    <thead>
+    <tr class="header">
+    <th>Shortcut</th>
+    <th>Description</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr class="odd">
+    <td><code>[CTRL+SHIFT+I]</code> or <code>[F12]</code></td>
+    <td>Show devtools</td>
+    </tr>
+    <tr class="even">
+    <td><code>[CTRL+SHIFT+E]</code></td>
+    <td>Show Network tab</td>
+    </tr>
+    <tr class="odd">
+    <td><code>[CTRL+SHIFT+K]</code></td>
+    <td>Show Console tab</td>
+    </tr>
+    </tbody>
+    </table>
+</body>
+</html>
