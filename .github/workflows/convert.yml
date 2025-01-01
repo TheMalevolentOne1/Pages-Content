@@ -46,9 +46,18 @@ jobs:
                   a { color: #0366d6; }
                   h1, h2, h3 { line-height: 1.2; }
                   img { max-width: 100%; }
+                  .breadcrumbs {
+                      margin-bottom: 20px;
+                      padding: 10px;
+                      background: #f6f8fa;
+                      border-radius: 4px;
+                  }
               </style>
           </head>
           <body>
+              <div class="breadcrumbs">
+                  <a href="/">Home</a> / $breadcrumbs$
+              </div>
               <h1>$title$</h1>
               $body$
           </body>
@@ -57,27 +66,109 @@ jobs:
           
       - name: Convert Markdown to HTML
         run: |
-          mkdir -p public
-          find . -name "*.md" -not -path "./public/*" -not -path "./.git/*" -exec sh -c '
-            filename=$(basename "$1")
+          mkdir -p converted-html
+          
+          # Find all .md files and convert them while preserving directory structure
+          find . -type f -name "*.md" -not -path "./converted-html/*" -not -path "./.git/*" -exec sh -c '
+            # Get the relative path of the file
+            relpath="${1#./}"
+            # Get the directory path
+            dirpath="$(dirname "$relpath")"
+            # Get just the filename
+            filename="$(basename "$1")"
+            # Get filename without extension
             basefilename="${filename%.*}"
+            # Create the target directory in converted-html
+            mkdir -p "converted-html/$dirpath"
+            # Generate breadcrumbs from the path
+            breadcrumbs=$(echo "$dirpath" | sed "s/\// \/ /g")
+            
+            # Convert the file
             pandoc "$1" \
               --from markdown \
               --to html \
               --standalone \
               --template=template.html \
               --metadata title:"$basefilename" \
-              --output "public/${basefilename}.html"
+              --metadata breadcrumbs:"$breadcrumbs" \
+              --output "converted-html/${relpath%.*}.html"
           ' sh {} \;
           
-      - name: Create index page
+      - name: Create directory index pages
         run: |
-          echo "<html><head><title>Index</title><style>body { max-width: 800px; margin: 40px auto; padding: 0 20px; font-family: sans-serif; }</style></head><body><h1>Pages</h1><ul>" > public/index.html
-          find public -name "*.html" -not -name "index.html" -exec sh -c '
-            filename=$(basename "$1")
-            echo "<li><a href=\"./${filename}\">${filename%.*}</a></li>" >> public/index.html
-          ' sh {} \;
-          echo "</ul></body></html>" >> public/index.html
+          # First create the main index page
+          echo '<!DOCTYPE html>
+          <html lang="en">
+          <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>Site Index</title>
+              <style>
+                  body {
+                      max-width: 800px;
+                      margin: 40px auto;
+                      padding: 0 20px;
+                      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+                  }
+                  .folder { margin-left: 20px; }
+                  .index-list { list-style-type: none; padding-left: 0; }
+                  .index-list li { margin: 8px 0; }
+                  .folder-name { font-weight: bold; margin: 16px 0 8px -20px; }
+              </style>
+          </head>
+          <body>
+              <h1>Site Index</h1>' > converted-html/index.html
+          
+          # Function to create index content for a directory
+          create_index() {
+            local dir="$1"
+            local indent="$2"
+            
+            # List directories first
+            find "$dir" -mindepth 1 -maxdepth 1 -type d | sort | while read subdir; do
+              local dirname=$(basename "$subdir")
+              echo "$indent<div class=\"folder\">"
+              echo "$indent  <div class=\"folder-name\">📁 $dirname</div>"
+              echo "$indent  <ul class=\"index-list\">"
+              # List HTML files in this directory
+              find "$subdir" -maxdepth 1 -type f -name "*.html" -not -name "index.html" | sort | while read file; do
+                local filename=$(basename "$file")
+                local relativepath="${file#converted-html/}"
+                echo "$indent    <li>📄 <a href=\"$relativepath\">${filename%.*}</a></li>"
+              done
+              echo "$indent  </ul>"
+              # Recurse into subdirectory
+              create_index "$subdir" "$indent  "
+              echo "$indent</div>"
+            done
+            
+            # List files in the root of this directory if it's the main directory
+            if [ "$dir" = "converted-html" ]; then
+              echo "$indent<ul class=\"index-list\">"
+              find "$dir" -maxdepth 1 -type f -name "*.html" -not -name "index.html" | sort | while read file; do
+                local filename=$(basename "$file")
+                echo "$indent  <li>📄 <a href=\"${filename}\">${filename%.*}</a></li>"
+              done
+              echo "$indent</ul>"
+            fi
+          }
+          
+          # Generate the index content
+          create_index "converted-html" "  " >> converted-html/index.html
+          
+          # Close the HTML
+          echo '  </body>
+          </html>' >> converted-html/index.html
+
+      - name: Create and push HTML branch
+        run: |
+          git checkout --orphan html-branch
+          git rm -rf .
+          cp -r converted-html/* .
+          rm -rf converted-html
+          git add .
+          git commit -m "Update HTML files"
+          git push -f origin html-branch
           
       - name: Setup Pages
         uses: actions/configure-pages@v4
@@ -85,16 +176,14 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./public
+          path: ./converted-html
           
   deploy:
     needs: build
     runs-on: ubuntu-latest
-    
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-      
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
