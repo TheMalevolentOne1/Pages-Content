@@ -88,7 +88,6 @@ jobs:
         run: |
           git checkout --orphan html-branch
           git rm -rf .
-          cp "index.html" .
           git add .
           git commit -m "Update index.html"
           git push -f origin html-branch:gh-pages
