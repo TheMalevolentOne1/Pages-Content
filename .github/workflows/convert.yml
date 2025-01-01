@@ -52,4 +52,6 @@ jobs:
           git push --force origin html-branch
 
       - name: Deploy to GitHub Pages
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         uses: actions/deploy-pages@v1
