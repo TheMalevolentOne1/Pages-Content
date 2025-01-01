@@ -50,8 +50,10 @@ jobs:
           git add .
           git commit -m "Generated HTML files"
           git push --force origin html-branch
-
-      - name: Deploy to GitHub Pages
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Deploy to GitHub Pages
         uses: actions/deploy-pages@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
