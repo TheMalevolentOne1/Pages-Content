@@ -3,12 +3,6 @@ name: Convert Obsidian Markdown to HTML and Deploy to GitHub Pages
 on:
   push:
     branches:
-      name: Convert Obsidian Markdown to HTML and Deploy to GitHub Pages
-      - main
-
-on:
-  push:
-    branches:
       - main
   workflow_dispatch:
 
@@ -32,7 +26,7 @@ jobs:
 
       - name: Build site with Hugo
         run: |
-          hugo -D
+          hugo
 
       - name: Prepare the GitHub Pages branch
         run: |
@@ -55,54 +49,4 @@ jobs:
         permissions:
           id-token: write
           contents: read
-        uses: actions/deploy-pages@v1
-
-  workflow_dispatch:
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Set Git user identity
-        run: |
-          git config --global user.name "TheMalevolentOne1"
-          git config --global user.email "${{ secrets.EMAIL_ADDRESS }}"
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.12.1"
-
-      - name: Install obsidian-html
-        run: |
-          python -m pip install --upgrade pip
-          pip install git+https://github.com/krissrex/obsidian-html.git
-
-      - name: Convert Obsidian Markdown to HTML
-        run: |
-          mkdir -p output
-          obsidian-html . -o output
-
-      - name: Prepare the HTML branch
-        run: |
-          git fetch --all
-          if git branch -r | grep -q "origin/html-branch"; then
-            git branch -D html-branch || true
-            git push origin --delete html-branch || true
-          fi
-          git checkout --orphan html-branch
-          git rm -rf .
-
-      - name: Copy generated files to HTML branch
-        run: |
-          cp -r output/* .
-          git add .
-          git commit -m "Generated HTML files"
-          git push --force origin html-branch
-
-      - name: Deploy to GitHub Pages
         uses: actions/deploy-pages@v1
