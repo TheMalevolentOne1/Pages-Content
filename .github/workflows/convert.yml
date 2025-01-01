@@ -26,6 +26,7 @@ jobs:
 
       - name: Build site with Hugo
         run: |
+          hugo new site .
           hugo
 
       - name: Prepare the GitHub Pages branch
