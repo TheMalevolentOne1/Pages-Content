@@ -23,7 +23,7 @@ jobs:
       - name: Install Pandoc
         run: |
           sudo apt-get update
-          sudo apt-get install -y pandoc
+          sudo apt-get install -y pandoc tar
           
       - name: Create HTML template
         run: |
@@ -81,7 +81,7 @@ jobs:
             # Create the target directory in converted-html
             mkdir -p "converted-html/$dirpath"
             # Generate breadcrumbs from the path
-            breadcrumbs=$(echo "$dirpath" | sed "s/\// \/ /g")
+            breadcrumbs=$(echo "$dirpath" | sed "s/\\// \\/ /g")
             
             # Convert the file
             pandoc "$1" \
@@ -177,6 +177,10 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./converted-html
+          name: github-pages
+          retention-days: 1
+        env:
+          GITHUB_PAGES: true
           
   deploy:
     needs: build
