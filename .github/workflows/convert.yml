@@ -41,34 +41,9 @@ jobs:
               --metadata title:"$basefilename" \
               --output "content/posts/${basefilename}.html"
           ' sh {} \;
-
-      - name: Install Hugo
-        uses: peaceiris/actions-hugo@v2
-        with:
-          hugo-version: "latest"
           
       - name: Setup Pages
         uses: actions/configure-pages@v4
-          
-      - name: Initialize Hugo site
-        run: |
-          hugo new site . --force
-          
-      - name: Create Hugo configuration
-        run: |
-          cat > config.toml << EOL
-          baseURL = "/"
-          languageCode = "en-us"
-          title = "My Obsidian Notes"
-          theme = "ananke"
-          EOL
-          
-      - name: Install Hugo theme
-        run: |
-          git clone https://github.com/theNewDynamic/gohugo-theme-ananke.git themes/ananke
-          
-      - name: Build site with Hugo
-        run: hugo
           
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
