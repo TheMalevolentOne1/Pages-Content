@@ -3,7 +3,8 @@ name: Convert Obsidian Markdown to HTML and Deploy to GitHub Pages
 on:
   push:
     branches:
-      - mainname: Convert Obsidian Markdown to HTML and Deploy to GitHub Pages
+      name: Convert Obsidian Markdown to HTML and Deploy to GitHub Pages
+      - main
 
 on:
   push:
