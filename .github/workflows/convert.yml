@@ -23,6 +23,25 @@ jobs:
           git config --global user.name "TheMalevolentOne1"
           git config --global user.email "${{ secrets.EMAIL_ADDRESS }}"
           
+      - name: Install Pandoc
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pandoc
+          
+      - name: Convert Markdown to HTML
+        run: |
+          mkdir -p content/posts
+          find . -name "*.md" -not -path "./content/*" -not -path "./.git/*" -exec sh -c '
+            filename=$(basename "$1")
+            basefilename="${filename%.*}"
+            pandoc "$1" \
+              --from markdown \
+              --to html \
+              --standalone \
+              --metadata title:"$basefilename" \
+              --output "content/posts/${basefilename}.html"
+          ' sh {} \;
+
       - name: Install Hugo
         uses: peaceiris/actions-hugo@v2
         with:
@@ -31,10 +50,25 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v4
           
-      - name: Build site with Hugo
+      - name: Initialize Hugo site
         run: |
           hugo new site . --force
-          hugo
+          
+      - name: Create Hugo configuration
+        run: |
+          cat > config.toml << EOL
+          baseURL = "/"
+          languageCode = "en-us"
+          title = "My Obsidian Notes"
+          theme = "ananke"
+          EOL
+          
+      - name: Install Hugo theme
+        run: |
+          git clone https://github.com/theNewDynamic/gohugo-theme-ananke.git themes/ananke
+          
+      - name: Build site with Hugo
+        run: hugo
           
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
