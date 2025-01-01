@@ -20,7 +20,7 @@ jobs:
           git config --global user.name "TheMalevolentOne1"
           git config --global user.email "${{ secrets.EMAIL_ADDRESS }}"
           
-      - name: Install Pandoc
+      - name: Install Pandoc and tar
         run: |
           sudo apt-get update
           sudo apt-get install -y pandoc tar
