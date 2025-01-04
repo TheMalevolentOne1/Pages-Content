@@ -53,7 +53,7 @@ The headers are terminated with a new line `\n` which is necessary for the serve
 # HTTP Response
 
 ![[HTTP-Response.png]]
-<sub>#Example: HTTP Response from GimmeProxy request earlier</sub>
+<sub>Example: HTTP Response from GimmeProxy request earlier</sub>
 
 As visible in the image above, the first two lines contain fields separated by spaces.
 
@@ -303,5 +303,5 @@ $ curl -vvv https://example.com
 </body>
 </html>
 * Connection #0 to host example.com left intact
-
 ```
+

@@ -5,10 +5,9 @@
 #HackTheBox
 
 ---
+[[Uni Contents]]
 
 The beginning of the place where I will begin relocating my notes for #HackTheBox Bug Bounty Hunter path.
-
----
 # Modules:
 1) [[Web Requests (Module Overview)]]
 2) [[Introduction to Web Applications Contents]]
