@@ -11,7 +11,7 @@ The beginning of the place where I will begin relocating my notes for #HackTheBo
 # Modules:
 1) [[Web Requests (Module Overview)]]
 2) [[Introduction to Web Applications Contents]]
-3) [[Using Web Proxies]]
+3) [[Using Web Proxies Contents]]
 4) [[Information Gathering - Web Edition]]
 5) [[Attacking Web Applications with Ffuf]]
 6) [[JavaScript Deobfuscation]]

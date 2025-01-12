@@ -2,7 +2,7 @@
 ---
 
 #Tier-0 
-#Fundamentall
+#Fundamental
 #HackTheBox 
 #BugBountyHunter 
 
@@ -10,7 +10,7 @@
 
 [[(Overview) Bug Bounty Hunter Path]]
 
-#### HTTP Fundamentals:
+## HTTP Fundamentals:
 ##### HyperText Transfer Protocol (HTTP):
 1) [HyperText Transfer Protocol (HTTP)](HyperText%20Transfer%20Protocol%20(HTTP).md#HyperText%20Transfer%20Protocol%20(HTTP))
 2) [Uniform Resource Locator (URL)](HyperText%20Transfer%20Protocol%20(HTTP).md#%20Uniform%20Resource%20Locator%20(URL))
@@ -32,7 +32,10 @@
 5) [Browser DevTools](HTTP%20Requests%20and%20Responses.md#%20Browser%20DevTools)
 6) [Exercises](HTTP%20Requests%20and%20Responses.md#%20Exercises)
 
-#### HTTP Method
+##### HTTP Headers:
+
+
+## HTTP Method
 
 ##### HTTP Methods and Codes:
 1) HTTP Methods and Codes

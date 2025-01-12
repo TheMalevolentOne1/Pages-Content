@@ -192,6 +192,8 @@ In browsers like **Chrome**, or **FireFox** to reveal the **DevTools** press **C
 
 **DevTools** contains many tabs, like the **Inspector** tab, used to inspect a webpage's **HTML** and **CSS** code, allowing it to be edited. The **Network** tab, will be the main focus as it is responsible for **web requests**.
 
+The **network tab** when refreshed shows the requests sent by the current web page. 
+
 
 
 ---
@@ -305,3 +307,14 @@ $ curl -vvv https://example.com
 * Connection #0 to host example.com left intact
 ```
 
+Try clicking on any of the requests to view their details. You can then click on the `Response` tab to view the response body, and then click on the `Raw` button to view the raw (unrendered) source code of the response body.
+
+Answer:
+
+What is the HTTP method used while intercepting the request? (case-sensitive)
+
+Answer: GET
+
+Send a GET request to the above server, and read the response headers to find the version of Apache running on the server, then submit it as the answer. (answer format: X.Y.ZZ)
+
+Answer: 2.4.41

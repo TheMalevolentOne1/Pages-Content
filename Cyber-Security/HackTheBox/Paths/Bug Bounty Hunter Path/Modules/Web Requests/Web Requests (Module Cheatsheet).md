@@ -4,9 +4,9 @@
 
 ---
 
-#Tier-0 
 #HackTheBox
-#BugBountyHunter 
+#Web-Requests 
+#Cheatsheet
 
 ---
 
