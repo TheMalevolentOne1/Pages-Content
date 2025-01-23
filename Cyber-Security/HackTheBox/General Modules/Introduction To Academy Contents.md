@@ -22,4 +22,4 @@
 ---
 
 ## Module Cheatsheet:
-[Cheatsheet](Introduction%20To%20Academy%20Cheatsheet)
+[Cheatsheet](Introduction%20To%20Academy%20Cheatsheet.md)
