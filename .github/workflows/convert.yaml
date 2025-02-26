@@ -39,13 +39,13 @@ jobs:
             <title>My Research Portfolio</title>
             <style>
               :root {
-                --primary: #2d3748;
+                --primary: #1a202c;
                 --secondary: #4a5568;
                 --accent: #2b6cb0;
                 --bg: #ffffff;
                 --bg-light: #f7fafc;
                 --border: #e2e8f0;
-                --code-bg: #f1f5f8;
+                --code-bg: #edf2f6;
               }
               * {
                 margin: 0;
@@ -120,6 +120,12 @@ jobs:
                 border-radius: 8px;
                 box-shadow: 0 2px 4px rgba(0,0,0,0.1);
               }
+              hr {
+                border: 0;
+                height: 1px;
+                background: var(--border);
+                margin: 2em 0;
+              }
               footer {
                 text-align: center;
                 padding: 40px 0;
@@ -156,29 +162,32 @@ jobs:
           # Create a temporary file for combined Markdown
           combined_md="combined.md"
           echo "" > "$combined_md"
-          
+
           # Find and process all Markdown files
           find . -type f -name "*.md" -not -path "./.git/*" -exec sh -c '
             relpath="${1#./}"
             filename="$(basename "$1")"
             basefilename="${filename%.*}"
-            
+
+            # Add a header for each file
+            echo -e "\n# ${basefilename//-/ }\n" >> combined.md
+
             # Replace Obsidian [[links]] with standard Markdown links
-            sed -E "s/\[\[([^|]+)\]\]/[\1](#\1)/g" "$1" | \
-            sed -E "s/\[\[([^|]+)\|([^]]+)\]\]/[\2](#\1)/g" | \
-            sed "s/ /-/g" >> combined.md
-            
+            sed -E "s/\[\[([^|]+)\]\]/[\1](#$(echo "\1" | tr " " "-" | tr "[:upper:]" "[:lower:]"))/g" "$1" | \
+            sed -E "s/\[\[([^|]+)\|([^]]+)\]\]/[\2](#$(echo "\1" | tr " " "-" | tr "[:upper:]" "[:lower:]"))/g" >> combined.md
+
             # Add a separator between files
             echo -e "\n---\n" >> combined.md
           ' sh {} \;
-          
+
           # Convert combined Markdown to HTML
           pandoc "$combined_md" \
-            --from markdown+auto_identifiers \
-            --to html \
+            --from markdown+auto_identifiers+smart \
+            --to html5 \
             --template template.html \
+            --standalone \
             --output index.html
-            
+
           # Clean up
           rm "$combined_md"
 
