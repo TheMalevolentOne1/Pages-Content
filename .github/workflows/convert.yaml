@@ -9,28 +9,25 @@ on:
 permissions:
   contents: write
   pages: write
-  id-token: write
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      - name: Configure Git user identity
+      - name: Set up Git identity
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-      - name: Install dependencies
+      - name: Install Pandoc
         run: |
           sudo apt-get update
           sudo apt-get install -y pandoc
 
-      - name: Create HTML template
+      - name: Generate HTML template
         run: |
           YEAR=$(date +%Y)
           cat > template.html << EOF
@@ -41,41 +38,53 @@ jobs:
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>\$title\$</title>
             <style>
+              :root {
+                --text: #2d3748;
+                --heading: #1a202c;
+                --link: #3182ce;
+                --bg: #f7fafc;
+                --code-bg: #f1f5f8;
+                --muted: #718096;
+                --breadcrumb-bg: #edf2f7;
+              }
               body {
                 max-width: 900px;
                 margin: 0 auto;
                 padding: 20px;
                 font-family: 'Georgia', serif;
                 line-height: 1.75;
-                color: #2d3748;
-                background: #f7fafc;
+                color: var(--text);
+                background: var(--bg);
               }
               h1, h2, h3 {
-                color: #1a202c;
+                color: var(--heading);
                 font-family: 'Helvetica Neue', Arial, sans-serif;
+                margin: 1em 0 0.5em;
               }
               a {
-                color: #3182ce;
+                color: var(--link);
                 text-decoration: none;
               }
               a:hover {
                 text-decoration: underline;
               }
-              .breadcrumbs {
+              nav.breadcrumbs {
                 margin: 20px 0;
-                padding: 10px;
-                background: #edf2f7;
+                padding: 12px;
+                background: var(--breadcrumb-bg);
                 border-radius: 6px;
                 font-size: 0.9em;
               }
-              .breadcrumbs a {
-                color: #4a5568;
+              nav.breadcrumbs a {
+                color: var(--muted);
               }
               pre, code {
-                background: #f1f5f8;
-                padding: 2px 6px;
-                border-radius: 4px;
+                background: var(--code-bg);
                 font-family: 'Fira Code', monospace;
+                border-radius: 4px;
+              }
+              code {
+                padding: 2px 6px;
               }
               pre {
                 padding: 12px;
@@ -84,12 +93,15 @@ jobs:
               img {
                 max-width: 100%;
                 border-radius: 4px;
+                margin: 1em 0;
               }
               footer {
                 margin-top: 40px;
                 text-align: center;
-                color: #718096;
+                color: var(--muted);
                 font-size: 0.85em;
+                padding: 20px 0;
+                border-top: 1px solid #e2e8f0;
               }
             </style>
           </head>
@@ -106,17 +118,18 @@ jobs:
           </html>
           EOF
 
-      - name: Convert Markdown files to HTML
+      - name: Convert Markdown to HTML
         run: |
-          mkdir -p docs
-          find . -type f -name "*.md" -not -path "./docs/*" -not -path "./.git/*" -exec sh -c '
+          mkdir -p output
+          find . -type f -name "*.md" -not -path "./output/*" -not -path "./.git/*" -exec sh -c '
             relpath="${1#./}"
             dirpath="$(dirname "$relpath")"
             filename="$(basename "$1")"
             basefilename="${filename%.*}"
-            output_dir="docs/$dirpath"
+            output_dir="output/$dirpath"
             mkdir -p "$output_dir"
             
+            # Generate breadcrumbs
             breadcrumbs=""
             IFS="/" read -ra parts <<< "$dirpath"
             current_path=""
@@ -127,26 +140,27 @@ jobs:
               fi
             done
             
+            # Convert to HTML
             pandoc "$1" \
               --from markdown+auto_identifiers \
               --to html \
               --template template.html \
               --metadata title="${basefilename//-/ }" \
               --metadata breadcrumbs="$breadcrumbs" \
-              --output "docs/${relpath%.*}.html"
+              --output "output/${relpath%.*}.html"
             
+            # Handle index page
             if [ "$filename" = "Welcome To My Notes!.md" ]; then
-              mv "docs/${relpath%.*}.html" "docs/index.html"
+              mv "output/${relpath%.*}.html" "output/index.html"
             fi
           ' sh {} \;
 
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: github-pages
-          path: docs/
-
-      - name: Deploy to GitHub Pages
-        uses: actions/deploy-pages@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Deploy to fresh gh-pages branch
+        run: |
+          git checkout --orphan gh-pages
+          git rm -rf .
+          mv output/* .
+          rm -rf output
+          git add .
+          git commit -m "Deploy fresh HTML portfolio" || echo "Nothing to commit"
+          git push -f origin gh-pages
