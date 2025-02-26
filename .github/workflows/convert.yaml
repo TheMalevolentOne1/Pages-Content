@@ -1,32 +1,39 @@
 name: Convert Markdown to Single HTML and Deploy to GitHub Pages
 
+# Trigger the workflow on pushes to the main branch or manual dispatch
 on:
   push:
     branches:
       - main
   workflow_dispatch:
 
+# Set permissions for writing to repository contents and GitHub Pages
 permissions:
   contents: write
   pages: write
 
+# Define the job to run on an Ubuntu runner
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
+      # Checkout the repository using the latest checkout action
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # Configure Git identity for the bot
       - name: Set up Git identity
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
+      # Install Pandoc for Markdown to HTML conversion
       - name: Install Pandoc
         run: |
           sudo apt-get update
           sudo apt-get install -y pandoc
 
+      # Generate a professional HTML template with dynamic year
       - name: Generate HTML template
         run: |
           YEAR=$(date +%Y)
@@ -163,6 +170,7 @@ jobs:
           </html>
           EOF
 
+      # Convert and merge all Markdown files into a single HTML file
       - name: Convert and merge Markdown to single HTML
         run: |
           # Create a temporary file for combined Markdown
@@ -178,7 +186,7 @@ jobs:
             # Add the full relative path and header
             echo -e "\n<div class=\"path\">$relpath</div>\n# ${basefilename//-/ }\n" >> "$combined_md"
 
-            # Replace Obsidian [[links]] with standard Markdown links, preserving content
+            # Replace Obsidian [[links]] with standard Markdown links
             sed -E "s/\[\[([^|]+)\]\]/[\1](#$(echo "\1" | tr " " "-" | tr "[:upper:]" "[:lower:]"))/g" "$file" | \
             sed -E "s/\[\[([^|]+)\|([^]]+)\]\]/[\2](#$(echo "\1" | tr " " "-" | tr "[:upper:]" "[:lower:]"))/g" >> "$combined_md"
 
@@ -186,7 +194,7 @@ jobs:
             echo -e "\n---\n" >> "$combined_md"
           done
 
-          # Convert combined Markdown to HTML
+          # Convert combined Markdown to HTML using Pandoc
           pandoc "$combined_md" \
             --from markdown+auto_identifiers+smart \
             --to html5 \
@@ -194,9 +202,10 @@ jobs:
             --standalone \
             --output index.html
 
-          # Clean up
+          # Clean up temporary file
           rm "$combined_md"
 
+      # Deploy the generated HTML to a fresh gh-pages branch
       - name: Deploy to fresh gh-pages branch
         run: |
           git checkout --orphan gh-pages
