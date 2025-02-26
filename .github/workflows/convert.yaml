@@ -140,6 +140,12 @@ jobs:
                 border-radius: 8px;
                 box-shadow: 0 4px 6px rgba(0,0,0,0.05);
               }
+              .path {
+                font-size: 0.9em;
+                color: var(--secondary);
+                margin-bottom: 0.5em;
+                font-style: italic;
+              }
             </style>
             <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;700&family=Merriweather:wght@400;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
           </head>
@@ -163,22 +169,22 @@ jobs:
           combined_md="combined.md"
           echo "" > "$combined_md"
 
-          # Find and process all Markdown files
-          find . -type f -name "*.md" -not -path "./.git/*" -exec sh -c '
-            relpath="${1#./}"
-            filename="$(basename "$1")"
+          # Find and process all Markdown files, sorted for consistency
+          find . -type f -name "*.md" -not -path "./.git/*" -print0 | sort -z | while IFS= read -r -d '' file; do
+            relpath="${file#./}"
+            filename="$(basename "$file")"
             basefilename="${filename%.*}"
 
-            # Add a header for each file
-            echo -e "\n# ${basefilename//-/ }\n" >> combined.md
+            # Add the full relative path and header
+            echo -e "\n<div class=\"path\">$relpath</div>\n# ${basefilename//-/ }\n" >> "$combined_md"
 
-            # Replace Obsidian [[links]] with standard Markdown links
-            sed -E "s/\[\[([^|]+)\]\]/[\1](#$(echo "\1" | tr " " "-" | tr "[:upper:]" "[:lower:]"))/g" "$1" | \
-            sed -E "s/\[\[([^|]+)\|([^]]+)\]\]/[\2](#$(echo "\1" | tr " " "-" | tr "[:upper:]" "[:lower:]"))/g" >> combined.md
+            # Replace Obsidian [[links]] with standard Markdown links, preserving content
+            sed -E "s/\[\[([^|]+)\]\]/[\1](#$(echo "\1" | tr " " "-" | tr "[:upper:]" "[:lower:]"))/g" "$file" | \
+            sed -E "s/\[\[([^|]+)\|([^]]+)\]\]/[\2](#$(echo "\1" | tr " " "-" | tr "[:upper:]" "[:lower:]"))/g" >> "$combined_md"
 
             # Add a separator between files
-            echo -e "\n---\n" >> combined.md
-          ' sh {} \;
+            echo -e "\n---\n" >> "$combined_md"
+          done
 
           # Convert combined Markdown to HTML
           pandoc "$combined_md" \
