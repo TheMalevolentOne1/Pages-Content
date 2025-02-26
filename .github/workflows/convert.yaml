@@ -32,7 +32,7 @@ jobs:
 
       - name: Create HTML template
         run: |
-          YEAR=$(date +%Y)  # Get current year
+          YEAR=$(date +%Y)
           cat > template.html << EOF
           <!DOCTYPE html>
           <html lang="en">
@@ -117,7 +117,6 @@ jobs:
             output_dir="docs/$dirpath"
             mkdir -p "$output_dir"
             
-            # Generate breadcrumbs with proper links
             breadcrumbs=""
             IFS="/" read -ra parts <<< "$dirpath"
             current_path=""
@@ -128,7 +127,6 @@ jobs:
               fi
             done
             
-            # Convert Markdown to HTML with Pandoc
             pandoc "$1" \
               --from markdown+auto_identifiers \
               --to html \
@@ -137,21 +135,16 @@ jobs:
               --metadata breadcrumbs="$breadcrumbs" \
               --output "docs/${relpath%.*}.html"
             
-            # Rename "Welcome To My Notes!.md" to "index.html"
             if [ "$filename" = "Welcome To My Notes!.md" ]; then
               mv "docs/${relpath%.*}.html" "docs/index.html"
             fi
           ' sh {} \;
 
-      - name: Create and push fresh gh-pages branch
-        run: |
-          git checkout --orphan gh-pages
-          git rm -rf .
-          mv docs/* .
-          rm -rf docs
-          git add .
-          git commit -m "Deploy fresh HTML portfolio to GitHub Pages" || echo "No changes to commit"
-          git push -f origin gh-pages
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: github-pages
+          path: docs/
 
       - name: Deploy to GitHub Pages
         uses: actions/deploy-pages@v4
