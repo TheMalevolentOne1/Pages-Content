@@ -1,0 +1,159 @@
+name: Convert Markdown to HTML and Deploy to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for file tracking
+
+      - name: Configure Git user identity
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pandoc
+
+      - name: Create HTML template
+        run: |
+          cat > template.html << 'EOF'
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>$title$</title>
+            <style>
+              body {
+                max-width: 900px;
+                margin: 0 auto;
+                padding: 20px;
+                font-family: 'Georgia', serif;
+                line-height: 1.75;
+                color: #2d3748;
+                background: #f7fafc;
+              }
+              h1, h2, h3 {
+                color: #1a202c;
+                font-family: 'Helvetica Neue', Arial, sans-serif;
+              }
+              a {
+                color: #3182ce;
+                text-decoration: none;
+              }
+              a:hover {
+                text-decoration: underline;
+              }
+              .breadcrumbs {
+                margin: 20px 0;
+                padding: 10px;
+                background: #edf2f7;
+                border-radius: 6px;
+                font-size: 0.9em;
+              }
+              .breadcrumbs a {
+                color: #4a5568;
+              }
+              pre, code {
+                background: #f1f5f8;
+                padding: 2px 6px;
+                border-radius: 4px;
+                font-family: 'Fira Code', monospace;
+              }
+              pre {
+                padding: 12px;
+                overflow-x: auto;
+              }
+              img {
+                max-width: 100%;
+                border-radius: 4px;
+              }
+              footer {
+                margin-top: 40px;
+                text-align: center;
+                color: #718096;
+                font-size: 0.85em;
+              }
+            </style>
+          </head>
+          <body>
+            <nav class="breadcrumbs">
+              <a href="/">Home</a>$breadcrumbs$
+            </nav>
+            <h1>$title$</h1>
+            $body$
+            <footer>
+              © ${{ github.event.repository.updated_at | date: "%Y" }} - My Research Portfolio
+            </footer>
+          </body>
+          </html>
+          EOF
+
+      - name: Convert Markdown files to HTML
+        run: |
+          mkdir -p docs
+          find . -type f -name "*.md" -not -path "./docs/*" -not -path "./.git/*" -exec sh -c '
+            relpath="${1#./}"
+            dirpath="$(dirname "$relpath")"
+            filename="$(basename "$1")"
+            basefilename="${filename%.*}"
+            output_dir="docs/$dirpath"
+            mkdir -p "$output_dir"
+            
+            # Generate breadcrumbs with proper links
+            breadcrumbs=""
+            IFS="/" read -ra parts <<< "$dirpath"
+            current_path=""
+            for part in "${parts[@]}"; do
+              if [ -n "$part" ]; then
+                current_path="$current_path/$part"
+                breadcrumbs="$breadcrumbs / <a href=\"${current_path%/}\">${part}</a>"
+              fi
+            done
+            
+            # Convert Markdown to HTML with Pandoc
+            pandoc "$1" \
+              --from markdown+auto_identifiers \
+              --to html \
+              --template template.html \
+              --metadata title="${basefilename//-/ }" \
+              --metadata breadcrumbs="$breadcrumbs" \
+              --output "docs/${relpath%.*}.html"
+            
+            # Rename "Welcome To My Notes!.md" to "index.html"
+            if [ "$filename" = "Welcome To My Notes!.md" ]; then
+              mv "docs/${relpath%.*}.html" "docs/index.html"
+            fi
+          ' sh {} \;
+
+      - name: Create and push fresh gh-pages branch
+        run: |
+          # Start with a fresh orphan branch
+          git checkout --orphan gh-pages
+          git rm -rf .
+          mv docs/* .
+          rm -rf docs
+          git add .
+          git commit -m "Deploy fresh HTML portfolio to GitHub Pages" || echo "No changes to commit"
+          git push -f origin gh-pages
+
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
