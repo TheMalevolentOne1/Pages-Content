@@ -18,7 +18,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Full history for file tracking
+          fetch-depth: 0
 
       - name: Configure Git user identity
         run: |
@@ -32,13 +32,14 @@ jobs:
 
       - name: Create HTML template
         run: |
-          cat > template.html << 'EOF'
+          YEAR=$(date +%Y)  # Get current year
+          cat > template.html << EOF
           <!DOCTYPE html>
           <html lang="en">
           <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>$title$</title>
+            <title>\$title\$</title>
             <style>
               body {
                 max-width: 900px;
@@ -94,12 +95,12 @@ jobs:
           </head>
           <body>
             <nav class="breadcrumbs">
-              <a href="/">Home</a>$breadcrumbs$
+              <a href="/">Home</a>\$breadcrumbs\$
             </nav>
-            <h1>$title$</h1>
-            $body$
+            <h1>\$title\$</h1>
+            \$body\$
             <footer>
-              © ${{ github.event.repository.updated_at | date: "%Y" }} - My Research Portfolio
+              © $YEAR - My Research Portfolio
             </footer>
           </body>
           </html>
@@ -144,7 +145,6 @@ jobs:
 
       - name: Create and push fresh gh-pages branch
         run: |
-          # Start with a fresh orphan branch
           git checkout --orphan gh-pages
           git rm -rf .
           mv docs/* .
