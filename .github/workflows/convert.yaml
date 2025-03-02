@@ -2,8 +2,8 @@ name: Convert Obsidian Markdown to HTML and Deploy to GitHub Pages
 
 on:
   push:
-    branches: [ main ]  # Trigger on push to main branch
-  workflow_dispatch:   # Allow manual trigger
+    branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   build-and-deploy:
@@ -13,18 +13,19 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v2
 
-      # Set up Python
+      # Set up Python (upgrade to 3.9 for obsidianhtml compatibility)
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.8'
+          python-version: '3.9'  # Updated from 3.8
 
       # Install dependencies
       - name: Install Dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y pandoc wkhtmltopdf
-          pip install obsidianhtml
+          python -m pip install --upgrade pip  # Upgrade pip
+          pip install obsidianhtml --verbose  # Install with verbose output
 
       # Copy custom Python script into the workflow environment
       - name: Copy Conversion Script
@@ -45,4 +46,4 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./public
           publish_branch: gh-pages
-          force_orphan: true  # Ensures a clean history on gh-pages branch
+          force_orphan: true
