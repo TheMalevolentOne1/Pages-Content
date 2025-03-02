@@ -1,215 +1,30 @@
-name: Convert Markdown to Single HTML and Deploy to GitHub Pages
+name: Generate HTML from Markdown
 
-# Trigger the workflow on pushes to the main branch or manual dispatch
 on:
   push:
     branches:
       - main
-  workflow_dispatch:
 
-# Set permissions for writing to repository contents and GitHub Pages
-permissions:
-  contents: write
-  pages: write
-
-# Define the job to run on an Ubuntu runner
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
     steps:
-      # Checkout the repository using the latest checkout action
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v2
 
-      # Configure Git identity for the bot
-      - name: Set up Git identity
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
 
-      # Install Pandoc for Markdown to HTML conversion
-      - name: Install Pandoc
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y pandoc
+      - name: Install dependencies
+        run: pip install markdown
 
-      # Generate a professional HTML template with dynamic year
-      - name: Generate HTML template
-        run: |
-          YEAR=$(date +%Y)
-          cat > template.html << EOF
-          <!DOCTYPE html>
-          <html lang="en">
-          <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>My Research Portfolio</title>
-            <style>
-              :root {
-                --primary: #1a202c;
-                --secondary: #4a5568;
-                --accent: #2b6cb0;
-                --bg: #ffffff;
-                --bg-light: #f7fafc;
-                --border: #e2e8f0;
-                --code-bg: #edf2f6;
-              }
-              * {
-                margin: 0;
-                padding: 0;
-                box-sizing: border-box;
-              }
-              body {
-                font-family: 'Merriweather', serif;
-                line-height: 1.8;
-                color: var(--primary);
-                background: var(--bg);
-                max-width: 1200px;
-                margin: 0 auto;
-                padding: 40px 20px;
-              }
-              header {
-                text-align: center;
-                padding: 40px 0;
-                border-bottom: 2px solid var(--border);
-                margin-bottom: 40px;
-              }
-              h1 {
-                font-family: 'Lora', serif;
-                font-size: 2.5em;
-                color: var(--primary);
-                margin-bottom: 0.5em;
-              }
-              h2 {
-                font-family: 'Lora', serif;
-                font-size: 1.8em;
-                color: var(--accent);
-                margin: 1.5em 0 0.75em;
-                border-bottom: 1px solid var(--border);
-                padding-bottom: 0.25em;
-              }
-              h3 {
-                font-family: 'Lora', serif;
-                font-size: 1.4em;
-                color: var(--secondary);
-                margin: 1.25em 0 0.5em;
-              }
-              p {
-                margin-bottom: 1.5em;
-              }
-              a {
-                color: var(--accent);
-                text-decoration: none;
-                transition: color 0.2s;
-              }
-              a:hover {
-                color: #1a4971;
-                text-decoration: underline;
-              }
-              pre, code {
-                background: var(--code-bg);
-                font-family: 'JetBrains Mono', monospace;
-                border-radius: 6px;
-              }
-              code {
-                padding: 0.2em 0.4em;
-              }
-              pre {
-                padding: 1em;
-                overflow-x: auto;
-                margin: 1.5em 0;
-                border: 1px solid var(--border);
-              }
-              img {
-                max-width: 100%;
-                display: block;
-                margin: 2em auto;
-                border-radius: 8px;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-              }
-              hr {
-                border: 0;
-                height: 1px;
-                background: var(--border);
-                margin: 2em 0;
-              }
-              footer {
-                text-align: center;
-                padding: 40px 0;
-                color: var(--secondary);
-                font-size: 0.9em;
-                border-top: 2px solid var(--border);
-                margin-top: 60px;
-              }
-              .content {
-                background: var(--bg-light);
-                padding: 30px;
-                border-radius: 8px;
-                box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-              }
-              .path {
-                font-size: 0.9em;
-                color: var(--secondary);
-                margin-bottom: 0.5em;
-                font-style: italic;
-              }
-            </style>
-            <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;700&family=Merriweather:wght@400;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
-          </head>
-          <body>
-            <header>
-              <h1>My Research Portfolio</h1>
-            </header>
-            <div class="content">
-              \$body\$
-            </div>
-            <footer>
-              © $YEAR - Curated Research and Notes
-            </footer>
-          </body>
-          </html>
-          EOF
+      - name: Generate HTML
+        run: python generate_html.py
 
-      # Convert and merge all Markdown files into a single HTML file
-      - name: Convert and merge Markdown to single HTML
-        run: |
-          # Create a temporary file for combined Markdown
-          combined_md="combined.md"
-          echo "" > "$combined_md"
-
-          # Find and process all Markdown files, sorted for consistency
-          find . -type f -name "*.md" -not -path "./.git/*" -print0 | sort -z | while IFS= read -r -d '' file; do
-            relpath="${file#./}"
-            filename="$(basename "$file")"
-            basefilename="${filename%.*}"
-
-            # Add the full relative path and header
-            echo -e "\n<div class=\"path\">$relpath</div>\n# ${basefilename//-/ }\n" >> "$combined_md"
-
-            # Replace Obsidian [[links]] with standard Markdown links
-            sed -E "s/\[\[([^|]+)\]\]/[\1](#$(echo "\1" | tr " " "-" | tr "[:upper:]" "[:lower:]"))/g" "$file" | \
-            sed -E "s/\[\[([^|]+)\|([^]]+)\]\]/[\2](#$(echo "\1" | tr " " "-" | tr "[:upper:]" "[:lower:]"))/g" >> "$combined_md"
-
-            # Add a separator between files
-            echo -e "\n---\n" >> "$combined_md"
-          done
-
-          # Convert combined Markdown to HTML using Pandoc
-          pandoc "$combined_md" \
-            --from markdown+auto_identifiers+smart \
-            --to html5 \
-            --template template.html \
-            --standalone \
-            --output index.html
-
-          # Clean up temporary file
-          rm "$combined_md"
-
-      # Deploy the generated HTML to a fresh gh-pages branch
-      - name: Deploy to fresh gh-pages branch
-        run: |
-          git checkout --orphan gh-pages
-          git rm -rf .
-          git add index.html
-          git commit -m "Deploy single-page HTML portfolio" || echo "Nothing to commit"
-          git push -f origin gh-pages
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: output.html
+          path: output.html
